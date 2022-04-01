@@ -1,7 +1,8 @@
 #importing libraries
-> library(timetk)
-> library(ggthemes)
-> library(tidyverse))
+library(tidyquant)
+library(timetk)
+library(ggthemes)
+library(tidyverse)
 options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
 
