@@ -1,0 +1,57 @@
+#importing libraries
+> library(timetk)
+> library(ggthemes)
+> library(tidyverse))
+options("getSymbols.warning4.0"=FALSE)
+options("getSymbols.yahoo.warning"=FALSE)
+
+# setting date (flexible)
+startDate = as.Date('2016-01-01')
+endDate = as.Date("2022-03-31")
+
+## Download data for slr and mlr
+tickers = c("NVDA", "SPY", "QQQ","AMD")
+getSymbols(tickers, src = "yahoo", from = startDate, to = endDate
+
+# importing 10-year-treasury bond data
+TTT = getSymbols("^TNX", src = "yahoo", from = startDate, to = endDate, auto.assign = FALSE)
+names(TTT) = gsub("^TNX", "TTT", names(TTT))
+
+# Creating dataframe of NVDA, SPY, QQQ, AMD, and TTT ([,4] = Close price)
+> df = merge(NVDA[,4], AMD[,4],SPY[,4],QQQ,[,4],TTT[,4], all = FALSE)
+
+# Revising na data for TTT
+df$TTT.Close = na.approx(df$TTT.Close)
+sum(is.na(df$TTT.Close))
+
+# Making monthly return data using log
+df_returns = na.omit(CalculateReturns(df, method = "log"))
+
+# Specifying the decimal places 
+# Reproduced from ref: https://stackoverflow.com/questions/32490182/r-format-regression-output
+
+specify_decimal <- function(x, k) format(round(x, k), nsmall=k)
+
+# Using specify_decimal to recapitulate the regression summary
+
+restate_summary  <- function(lmsummary, digits) {
+
+  coefs <- as.data.frame(lmsummary)
+  coefs[] <- lapply(coefs, function(x) specify_decimal(x, digits))
+  coefs
+
+}
+
+# SLR
+lm_slr = lm(NVDA.Close ~ QQQ.Close, data  = df_returns)
+print(lm_slr)
+summary(lm_slr)
+restate_summary(summary(lm_slr)$coefficients, 4)
+
+# MLR
+lm_mlr = lm(NVDA.Close ~ QQQ.Close + AMD.Close + TTT.Close, data = df_returns)
+print(lm_mlr)
+summary(lm_mlr)
+restate_summary(summary(lm_mlr)$coefficients, 4)
+
+### Reference : https://blog.quantinsti.com/linear-regression-market-data-python-r/
