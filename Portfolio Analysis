@@ -1,0 +1,39 @@
+library(quantmod)
+library(PerformanceAnalytics)
+
+tickers <- c("FB","AAPL","AMZN","GOOG")
+weights <- c(0.25,0.25,0.25,0.25)
+portfolioPrices <- NULL
+for(ticker in tickers) {
+portfolioPrices <- cbind(portfolioPrices, 
+getSymbols.yahoo(ticker, from = '2016-01-01', periodicity = 'daily', auto.assign=FALSE)[,4])
+   }
+#return on each stock
+portfolioReturns <- na.omit(ROC(portfolioPrices))
+
+#checking missing data
+colSums(is.na(portfolioPrices))
+
+#benchmark (S&P 500)
+benchmarkPrices <- getSymbols.yahoo('^GSPC', from = '2016-01-01', periodicity = 'daily', auto.assign=FALSE)[,4]
+View(benchmarkPrcies)
+benchmarkReturns <- na.omit(ROC(benchmarkPrices))
+colSums(is.na(benchmarkPrcies))
+
+#overall portfolio return
+portfolioReturn <-Return.portfolio(portfolioReturns)
+
+#calculate beta
+CAPM.beta(portfolioReturn,benchmarkReturns, 0.24/252)
+
+#calculate alpha
+CAPM.jensenAlpha(portfolioReturn, benchmarkReturns, 0.24/252)
+
+#sharpratio
+SharpeRatio(portfolioReturn, 0.24/252)
+
+table.AnnualizedReturns(portfolioReturn)
+table.CalendarReturns(portfolioReturn)
+
+#Reference 
+https://www.youtube.com/watch?v=2Y4HX0UUcrA
