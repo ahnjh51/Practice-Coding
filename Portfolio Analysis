@@ -21,7 +21,7 @@ benchmarkReturns <- na.omit(ROC(benchmarkPrices))
 colSums(is.na(benchmarkPrcies))
 
 #overall portfolio return
-portfolioReturn <-Return.portfolio(portfolioReturns)
+portfolioReturn <-Return.portfolio(portfolioReturns, weights = weights)
 
 #calculate beta
 CAPM.beta(portfolioReturn,benchmarkReturns, 0.24/252)
