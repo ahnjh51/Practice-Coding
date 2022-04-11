@@ -1,0 +1,90 @@
+#Loading Libraries
+import numpy as np
+import pandas as pd
+from pandas_datareader import data
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+#Importing data
+df = data.DataReader(['MSFT','NVDA','GOOG','AMZN'],'yahoo',start = '2016/01/01')
+df = df['Adj Close']
+df.head()
+
+# Log of percentage change
+cov_matrix = df.pct_change().apply(lambda x:np.log(1+x)).cov()
+cov_matrix
+corr_matrix = df.pct_change().apply(lambda x: np.log(1+x)).corr()
+corr_matrix
+
+# Random weight portfolio variance
+w = {'MSFT':0.2,'NVDA':0.4,'GOOG':0.3,'AMZN':0.1}
+port_var = cov_matrix.mul(w,axis=0).mul(w,axis=1).sum().sum()
+port_var
+
+#yearly returns for individual companies(resample function)
+ind_er = df.resample('Y').last().pct_change().mean()
+ind_er
+
+w = [0.2,0.4,0.3,0.2]
+port_w = (w*ind_er).sum()
+port_w
+
+# Volatility (annual standard deviation)
+ann_sd = df.pct_change().apply(lambda x: np.log(1+x)).std().apply(lambda x: x*np.sqrt(250))
+ann_sd
+
+# Creating tables for visualization
+assets = pd.concat([ind_er,ann_sd],axis=1)
+assets.columns = ['Returns','Volatilty']
+assets
+
+p_ret = [] # Define an empty array for portfolio returns
+p_vol = [] # Define an empty array for portfolio volatility
+p_weights = [] # Define an empty array for asset weights
+
+num_assets = len(df.columns)
+num_portfolios = 10000
+
+for portfolio in range(num_portfolios):
+    weights = np.random.random(num_assets)
+    weights = weights/np.sum(weights)
+    p_weights.append(weights)
+    returns = np.dot(weights, ind_er) # Returns are the product of individual expected returns of asset and its 
+                                      # weights 
+    p_ret.append(returns)
+    var = cov_matrix.mul(weights, axis=0).mul(weights, axis=1).sum().sum()# Portfolio Variance
+    sd = np.sqrt(var) # Daily standard deviation
+    ann_sd = sd*np.sqrt(250) # Annual standard deviation = volatility
+    p_vol.append(ann_sd)
+    
+    data = {'Returns':p_ret, 'Volatility':p_vol}
+
+for counter, symbol in enumerate(df.columns.tolist()):
+    #print(counter, symbol)
+    data[symbol+' weight'] = [w[counter] for w in p_weights]
+    
+portfolios=pd.DataFrame(data)
+portfolios.tail()
+
+# Plotting efficient frontier
+portfolios.plot.scatter(x='Volatility',y='Returns',marker='o',s=10,alpha=0.3,grid=True,figsize=[10,10])
+
+# Minimum Volatility Portfolio
+min_vol_port = portfolios.iloc[portfolios['Volatility'].idxmin()]
+min_vol_port
+
+# plotting minimun volatility
+plt.subplots(figsize=[10,10])
+plt.scatter(portfolios['Volatility'], portfolios['Returns'],marker='o', s=10, alpha=0.3)
+plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+
+#Optimial Risky Portfolio
+rf = 0.027
+optimal_risky_port = portfolios.iloc[((portfolios['Returns']-rf)/portfolios['Volatility']).idxmax()]
+optimal_risky_port
+
+# Plotting optimal portfolio
+plt.subplots(figsize=(10, 10))
+plt.scatter(portfolios['Volatility'], portfolios['Returns'],marker='o', s=10, alpha=0.3)
+plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
