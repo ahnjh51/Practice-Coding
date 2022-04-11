@@ -88,3 +88,6 @@ plt.subplots(figsize=(10, 10))
 plt.scatter(portfolios['Volatility'], portfolios['Returns'],marker='o', s=10, alpha=0.3)
 plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
 plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
+
+Reference
+https://www.machinelearningplus.com/machine-learning/portfolio-optimization-python-example/
