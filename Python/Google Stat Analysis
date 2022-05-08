@@ -1,0 +1,54 @@
+import numpy as np
+import pandas as pd
+import pandas_datareader as pdr
+from pandas_datareader import data
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+rcParams['figure.figsize']= 8, 6
+import seaborn as sb
+sb.set()
+
+goog = data.DataReader('GOOG','yahoo',start='2002')
+goog.head()
+
+goog_close = goog['Close']
+goog_return = round(np.log(goog_close).diff()*100,2)
+goog_return.head()
+goog_return[-252:].plot()
+
+goog_return.dropna(inplace=True)
+goog_return.describe()
+
+from scipy import stats
+n, minmax, mean, var, skew, kurt = stats.describe(goog_return)
+mini, maxi = minmax
+std = var **.5
+from scipy.stats import norm
+plt.hist(goog_return, bins=15);
+
+from scipy.stats import norm
+x = norm.rvs(mean,std,n)
+plt.hist(x,bins=15)
+
+x_test = stats.kurtosistest(x)
+goog_test = stats.kurtosistest(goog_return)
+print(f'{"     Test statistic":20}{"p-value":>15}')
+print(f'{" "*5}{"-"* 30}')
+print(f"x:{x_test[0]:>17.2f}{x_test[1]:16.4f}")
+print(f"GOOG: {goog_test[0]:13.2f}{goog_test[1]:16.4f}")
+
+plt.hist(goog_return,bins = 25, edgecolor = 'w', density = True)
+overlay = np.linspace(mini,maxi, 100)
+plt.plot(overlay, norm.pdf(overlay, mean,std));
+# The price of Google is not normally distributed
+
+stats.ttest_1samp(goog_return.sample(252), 0, alternative = 'two-sided')
+goog_close = pd.DataFrame(goog_close, columns = ['Close'])
+goog_close['lag_1'] = goog_close.Close.shift(1)
+goog_close['lag_2'] = goog_close.Close.shift(2)
+goog_close.dropna(inplace=True)
+goog_close.head()
+lr=np.linalg.lstsq(goog_close[['lag_1','lag_2']],goog_close['Close'], rcond = None)[0]
+goog_close['predict'] = np.dot(goog_close[['lag_1', 'lag_2']], lr)
+goog_close.head()
+goog_close.iloc[-252:][['Close','predict']].plot()
