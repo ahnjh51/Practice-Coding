@@ -1,0 +1,143 @@
+library(tidyquant)
+library(timetk)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(corrplot)
+
+tickers <- c("SPY","QQQ","META","GOOG")
+
+multpl_stocks <- tq_get(tickers,
+                        from = '2016-01-01',
+                        to = '2022-08-01',
+                        get = 'stock.prices')
+multpl_stocks %>%
+  ggplot(aes(x = date, y = adjusted, color = symbol))+
+  geom_line() +
+  ggtitle('Price chart for multiple stocks')
+
+multpl_stocks %>%
+  ggplot(aes(x=date, y=adjusted))+
+  geom_line() +
+  facet_wrap(~symbol, scales = "free_y") +
+  theme_classic() +
+  labs(x='Date',y='Price') +
+  ggtitle('Price Chart')
+
+
+#calculating Returns for multiple stocks
+multpl_stock_daily_returns <- multpl_stocks %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "daily",
+               col_rename = "returns")
+
+multpl_stock_monthly_returns <- multpl_stocks %>%
+  group_by(symbol) %>%
+  tq_transmute(select = adjusted,
+               mutate_fun = periodReturn,
+               period = "monthly",
+               col_rename = "returns")
+
+multpl_stock_daily_returns %>%
+  ggplot(aes(x=date,y=returns))+
+  geom_line()+
+  geom_hline(yintercept = 0)+
+  facet_wrap(~symbol,scales='free_y') +
+  scale_y_continuous(labels=scales::percent)+
+  ggtitle('Daily Returns for stocks') +
+  labs(x='Date',y='Returns') +
+  scale_color_brewer(palette = 'Set2',
+                     name = '',
+                     guide = 'none') +
+  theme_classic()
+
+multpl_stock_monthly_returns %>%
+  ggplot(aes(x=date,y=returns))+
+  geom_bar(stat = 'identity')+
+  geom_hline(yintercept = 0)+
+  facet_wrap(~symbol,scales='free_y') +
+  scale_y_continuous(labels=scales::percent,
+                     breaks = seq(-0.5,0.75,0.05))+
+  ggtitle('Monthly Returns for stocks') +
+  labs(x='Date',y='Returns') +
+  scale_color_brewer(palette = 'Set1',
+                     name = '',
+                     guide = 'none') +
+  theme_classic()
+
+#Charing cumulat ive Returns for multople stocks
+multpl_stock_monthly_returns %>%
+  mutate(returns = if_else(date == '2016-01-01',0,returns)) %>%
+  group_by(symbol) %>%
+  mutate(cr = cumprod(1+returns)) %>%
+  mutate(cumulative_returns = cr -1) %>%
+  ggplot (aes(x = date, y=cumulative_returns, color = symbol)) +
+  geom_line() +
+  labs(x='Date',y='Cumulative Returns') +
+  ggtitle('Cumulative Returns since 2016') +
+  scale_y_continuous(breaks = seq(0,20,1),
+                     labels = scales :: percent) +
+  scale_color_brewer(palette = 'Set1',
+                     name = '')+
+  theme_bw()
+
+# Calculating mean and SD
+
+multpl_stock_daily_returns %>%
+  group_by(symbol) %>%
+  summarise(mean=mean(returns),
+            sd=sd(returns))
+
+multpl_stock_monthly_returns %>%
+  group_by(symbol) %>%
+  summarise(mean=mean(returns),
+            sd=sd(returns))
+
+multpl_stock_monthly_returns %>%
+  mutate(year = year(date)) %>%
+  group_by(symbol,year) %>%
+  summarise(mean = mean(returns),
+            sd=sd(returns))
+
+multpl_stock_monthly_returns %>%
+  mutate(year = year(date)) %>%
+  group_by(symbol,year) %>%
+  summarise(mean = mean(returns),
+            sd=sd(returns)) %>%
+  ggplot(aes(x=year, y=mean, fill=symbol)) +
+  geom_bar(stat='identity',position = 'dodge',width = 0.7) +
+  scale_y_continuous(breaks = seq(-0.1,0.4,0.02),
+                     labels = scales :: percent) +
+  scale_x_continuous(breaks = seq(2016,2022,1))+
+  labs(x='year',y='mean returns') +
+  theme_bw() +
+  theme(legend.position = 'top') +
+  scale_fill_brewer(palette = 'Set1',
+                    name='Stocks') +
+  ggtitle ('Monthly Mean Returns')
+
+multpl_stock_monthly_returns %>%
+  mutate(year = year(date)) %>%
+  group_by(symbol,year) %>%
+  summarise(mean = mean(returns),
+            sd=sd(returns)) %>%
+  ggplot(aes(x=year, y=sd, fill=symbol)) +
+  geom_bar(stat='identity',position = 'dodge',width = 0.7) +
+  scale_y_continuous(breaks = seq(-0.1,0.4,0.02),
+                     labels = scales :: percent) +
+  scale_x_continuous(breaks = seq(2016,2022,1))+
+  labs(x='year',y='Std Dev') +
+  theme_bw() +
+  theme(legend.position = 'top') +
+  scale_fill_brewer(palette = 'Set1',
+                    name='Stocks') +
+  ggtitle ('Monthly Standard Deviation')
+
+# Calculate Covariance
+multpl_stock_monthly_returns %>%
+  spread(symbol,value=returns) %>%
+  tk_xts(silent = TRUE) %>%
+  cor() %>%
+  corrplot()
