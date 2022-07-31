@@ -91,3 +91,58 @@ google_monthly_returns%>%
   labs(x="Date",y="Cumulative Returns")+
   ggtitle("Cumulative returns for Alphabet since 2016",
           subtitle = "$1 investment in 2016 became $2.14 in 2022")
+          
+ #Calculate Mean Return
+goog_daily_mean_ret <- google_daily_returns%>%
+  select(goog_returns) %>%
+  .[[1]]%>%
+  mean(na.rm = TRUE)
+
+goog_monthly_mean_ret <- google_monthly_returns%>%
+  select(goog_returns) %>%
+  .[[1]] %>%
+  mean(na.rm=TRUE)
+
+#Calculating Standard Deviation
+
+goog_daily_sd_ret <- google_daily_returns %>%
+  select(goog_returns) %>%
+  .[[1]] %>%
+  sd()
+
+goog_monthly_sd_ret <- google_monthly_returns %>%
+  select(goog_returns) %>%
+  .[[1]] %>%
+  sd()
+
+goog_stat <- tibble(period = c("Daily", "Monthly"),
+                    mean = c(goog_daily_mean_ret, goog_monthly_mean_ret),
+                    sd = c(goog_daily_sd_ret, goog_monthly_sd_ret))
+goog_stat
+
+#Yearly Return and Volatitlity
+goog_yearly_data <- google_monthly_returns %>%
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  summarise(Monthly_Mean_Returns = mean(goog_returns),
+            Monthly_Standard_Deviation = sd(goog_returns))
+
+#Plotting Returns and Standard Deviation
+google_monthly_returns %>%
+  mutate(year=year(date)) %>%
+  group_by(year) %>%
+  summarise(Mean_Returns = mean(goog_returns),
+            Standard_Deviation = sd(goog_returns)) %>%
+  gather(Mean_Returns, Standard_Deviation, key = statistic, value = value) %>%
+  ggplot(aes(x=year, y=value, fill = statistic)) +
+  geom_bar(stat='identity',position = 'dodge') +
+  scale_y_continuous(breaks =seq(-0.1,0.4,0.02),
+                     labels = scales::percent)+
+  scale_x_continuous(breaks = seq(2016,2022,1))+
+  labs(x="Year",y="")+
+  theme_bw()+
+  theme(legend.position = "top")+
+  scale_fill_brewer(palette = "Set1",
+                    name="",
+                    labe = c("Mean","Standard Deviation")) +
+  ggtitle("Google Monthly Mean Return and Standard Deviation")
