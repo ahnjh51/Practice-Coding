@@ -1,0 +1,41 @@
+library(magrittr)
+library(highcharter)
+library(xts)
+symbols <- c('SPY','QQQ','NVDA','GOOG')
+prices <- quantmod::getSymbols(
+  Symbol=symbols,
+  periodicity = 'monthly',
+  src='yahoo',
+  from='2012-12-31',
+  to='2022-08-29',
+  auto.assingn = TRUE,
+  warnings = FALSE)
+
+df = merge(GOOG[,6], NVDA[,6], SPY[,6],QQQ[,6], all = FALSE)
+
+
+df_returns <- PerformanceAnalytics::CalculateReturns(df, method = 'log') %>%
+  na.omit
+
+highchart(type='stock') %>%
+  hc_title(text = 'Monthly LOG Returns for GOOG, NVDA, SPY, QQQ') %>%
+  hc_add_series(
+    data = df_returns[,"GOOG.Adjusted"],
+    name = "GOOG") %>%
+  hc_add_series(
+    data = df_returns[,"NVDA.Adjusted"],
+    name = "NVDA"
+  ) %>%
+  hc_add_series(
+    data = df_returns[,"SPY.Adjusted"],
+    name = "SPY"
+  ) %>%
+  hc_add_series(
+    data = df_returns[,"QQQ.Adjusted"],
+    name = "QQQ"
+  ) %>%
+  hc_add_theme(hc_thm = hc_theme_bloom()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
