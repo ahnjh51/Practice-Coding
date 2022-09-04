@@ -1,0 +1,239 @@
+---
+title: 'FBE 506 #2 Jaehyun Ahn'
+author: "Jaehyun Ahn"
+date: '2022-09-02'
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+---
+title: 'FBE 506 #2'
+author: "Jaehyun Ahn"
+date: '2022-09-02'
+output: html_document
+---
+
+UNIVERSITY OF SOUTHERN CALIFORNIA Marshall School of Business FBE 506 Quantitative Methods in Finance M. Safarzadeh
+
+Assignment \# 2 Student Name: Jaehyun Ahn
+
+1.  Graph the following functions:
+
+```{=html}
+<!-- -->
+```
+a.  Y = 1.5X + 4 b. Y = Ln(X) c. Y = e\^X d. Y = 5/(X -- 1)
+
+b.  Y = X\^2 -- 2X + 20 f. Y = X3 - X2 + 12X + 20
+
+```{r}
+#Graphing 1-a
+func_1_a <- function(x) 1.5*x + 4 
+a <- plot(func_1_a,-10,10, xlab = 'X', ylab = 'Y', main = 'Y=1.5X+4')
+```
+
+```{r}
+#Graphing 1-b
+func_1_b <- function(x) log(x)
+plot(func_1_b, 1, 100, xlab = 'X', ylab = 'Y', main = 'Y=Ln(x)')
+```
+
+```{r}
+#Graphing 1-c
+func_1_c <- function(x) exp(x)
+plot(func_1_c, 1, 5, xlab = 'X', ylab = 'Y', main = 'Y=e^X')
+```
+
+```{r}
+#Graphing 1-d
+func_1_d <- function(x) 5/(x-1)
+plot(func_1_d, 1, 21, xlab = 'X', ylab = 'Y', main = 'Y=5/(x-1)')
+```
+
+```{r}
+#Graphing 1-e
+func_1_e <- function(x) x^2-2*x+20
+plot(func_1_e, -5, 7, xlab = 'X', ylab = 'Y', main = 'Y=x^2-2x+20')
+```
+
+```{r}
+#Graphing 1-f
+func_1_f <- function(x) x^3-x^2+12*x+20
+plot(func_1_f, -3, 5, xlab = 'X', ylab = 'Y', main = 'Y=x^3-2^2+12x+20')
+```
+
+2.  Graph the following functions where T is time:
+
+```{=html}
+<!-- -->
+```
+a.  Y = .5\^T b. Y = 2\^T c. Y = (-.5)\^T\
+
+```{r}
+#Graphing 2-a
+func_2_a <- function(t) 0.5^t
+plot(func_2_a, -5, 10, xlab = 'Time', ylab = 'Y', main = 'Y=0.5^t')
+```
+
+```{r}
+#Graphing 2-b
+func_2_b <- function(t) 2^t
+plot(func_2_b, 0, 5, xlab = 'Time', ylab = 'Y', main = 'Y=2^t')
+```
+
+```{r}
+#Graphing 2-c
+t <- c(-2:8)
+func_2_c <- function(t) (-1/2)^t
+plot(t,func_2_c(t), type = 'l',xlab = 'Time', ylab = 'Y', main = 'Y=(-0.5)^t')
+```
+
+3.  Download S&P500 index. Convert the index from daily to monthly. Convert the monthly index to monthly return to S&P500. Graph the monthly index. Graph the monthly return to S&P500
+
+```{r}
+#importing necessary library
+library(quantmod)
+
+#importing mothly S&P 500 index from quantmod
+getSymbols('^GSPC',
+           periodicity= 'monthly',
+           src = 'yahoo')
+tail(GSPC)
+```
+
+```{r}
+#Extract adjusted S&P 500 index data
+gspc_ad <- GSPC[,6]
+tail(gspc_ad)
+```
+
+```{r}
+# Graphing the monthly S&P 500 index
+# Import plotting package and pipe operator package
+library(highcharter)
+library(magrittr)
+
+highchart(type='stock') %>%
+  hc_title(text =  ' Monthly S&P 500 Index ') %>%
+  hc_add_series(data = gspc_ad,
+                name = 'S&P500') %>%
+  hc_add_theme(hc_thm = hc_theme_economist()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+```{r}
+#Compute monthly return of S&P 500 index using PeformanceAnalytics package
+gspc_return <- monthlyReturn(gspc_ad)
+head(gspc_return)
+```
+
+```{r}
+#Graphing monthly return of S&P 500 index
+highchart(type='stock') %>%
+  hc_title(text =  ' Montly Return of S&P 500 Index ') %>%
+  hc_add_series(data = gspc_return,
+                name = 'S&P500') %>%
+  hc_add_theme(hc_thm = hc_theme_economist()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+
+```
+
+5.  Download AAPL (Apple stock prices). Convert AAPL to monthly AAPL. Graph the monthly price data. Convert monthly AAPL price to return to monthly AAPL and graph the return to monthly AAPL.
+
+```{r}
+#Donwloading Apple Monthly Data
+getSymbols('AAPL',
+           periodicity= 'monthly',
+           src = 'yahoo')
+
+#Plotting monthly Apple stock price
+highchart(type='stock') %>%
+  hc_title(text =  ' Monthly Apple Stock Price ') %>%
+  hc_add_series(data = AAPL[,6],
+                name = 'Apple') %>%
+  hc_add_theme(hc_thm = hc_theme_economist()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+```{r}
+#Converting Apple stock price to monthly return
+aapl_return <- monthlyReturn(AAPL[,6])
+
+#Plotting Apple monthly return
+highchart(type='stock') %>%
+  hc_title(text =  ' Montly Return of Apple ') %>%
+  hc_add_series(data = aapl_return,
+                name = 'S&P500') %>%
+  hc_add_theme(hc_thm = hc_theme_economist()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+6.  Graph monthly AAPL and monthly S&P500 on one coordinate system and comment on the relation between the two variables.
+
+```{r}
+#Merging monthly adjusted S&p500 index and Apple stock price
+df <- merge(AAPL[,6],GSPC[,6])
+
+#Normalize data for easier compariso
+min_max_norm <- function(x) {(x-min(x))/(max(x)-min(x))}
+
+#Apply
+norm_aapl <-min_max_norm(df[,1])
+norm_gspc <-min_max_norm(df[,2])
+```
+
+```{r}
+#Plot the normilized data
+highchart(type='stock') %>%
+  hc_title(text =  ' Apple vs S&P 500 ') %>%
+  hc_add_series(data = norm_aapl,
+                name = 'Apple') %>%
+  hc_add_series(data= norm_gspc,
+                name = 'S&P 500')%>%
+  hc_add_theme(hc_thm = hc_theme_gridlight()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+Both Apple and S&P 500 has shown a inclining trend since 2009 and there are some points that both variables tend to have a positive correlation. From 2019, the grraph shows that Apple's stock price has increased more rapidly than the S&P 500, which indicates that Apple's stock responds more senstively than the market.
+
+7.  Graph returns to monthly AAPL and monthly S&P500 on one coordinate system and comment on their relation.
+
+```{r}
+highchart(type='stock') %>%
+  hc_title(text =  ' Montly Return of S&P 500 Index and APPLE ') %>%
+  hc_add_series(data = aapl_return[,1],
+                name = 'Apple') %>%
+  hc_add_series(data= gspc_return[,1],
+                name = 'S&P 500')%>%
+  hc_add_theme(hc_thm = hc_theme_538()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+According to the monthly return graph, it seems that the return of Apple and S&P 500 has a positive correlation. However, Apple shows a higher volatility than the market.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(knitr.duplicate.label = "allow")
+```
