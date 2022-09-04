@@ -144,7 +144,66 @@ highchart(type='stock') %>%
   hc_exporting(enabled=TRUE) %>%
   hc_legend(enabled=TRUE)
 ```
+4.  Download the quarterly real GDP from Fred and graph the GDP. Convert the real GDP to real GDP growth and graph the real GDP growth.
+library(highcharter)
+library(dplyr)
+library(xts)
+library(magrittr)
 
+```{r}
+# Import downloaded Real GDP data, converting Dataframe to time series data
+rgdp <- read.csv("C:/Users/Jaehyun/Desktop/12345/GDPC1.csv",header = TRUE)
+names(rgdp) <- c('Date','RGDP')
+rgdp$Date <- as.Date(rgdp$Date)
+```
+
+```{r}
+#Convert dataframe to xts in order to chart Real GDP
+rgdp_xts_1 <- xts(rgdp$RGDP, rgdp$Date)
+
+#Plot Real GDP
+highchart(type='stock') %>%
+  hc_title(text =  ' Real GDP ') %>%
+  hc_add_series(data = rgdp_xts_1[,1],
+                name = 'Real GDP') %>%
+  hc_add_theme(hc_thm = hc_theme_google()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
+```
+
+```{r}
+#Convert real GDP to real GDP growth
+#compute (Rt+1-Rt)
+rgdp_1 <- rgdp %>%
+  mutate(Growth = RGDP-lag(RGDP))
+head(rgdp_1)
+```
+
+```{r}
+#Computing rate of growth
+rgdp_2 <- rgdp_1 %>%
+  mutate(Growth_rate = (Growth/RGDP)*100)
+rgdp_2 <- na.omit(rgdp_2)
+head(rgdp_2)
+```
+
+```{r}
+#Convert dataframe to xts in order to chart the data
+rgdp_xts_2 <- xts(rgdp_2$Growth_rate,rgdp_2$Date)
+names(rgdp_xts_2) <- c('Growth_Rate')
+
+#Graph the real GDP growth
+highchart(type='stock') %>%
+  hc_title(text =  ' Real Growth Rate ') %>%
+  hc_add_series(data = rgdp_xts_2[,1],
+                name = 'Real GDP Growth Rate') %>%
+  hc_add_theme(hc_thm = hc_theme_google()) %>%
+  hc_navigator(enabled=TRUE) %>%
+  hc_scrollbar(enabled=TRUE) %>%
+  hc_exporting(enabled=TRUE) %>%
+  hc_legend(enabled=TRUE)
 
 ```
 
